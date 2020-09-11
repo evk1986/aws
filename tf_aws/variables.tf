@@ -1,15 +1,25 @@
-variable "AWS_REGION" {
+variable "region" {
   default = "us-west-2"
 }
 
-variable "PROFILE" {
+variable "profile" {
   default = "default"
 }
 
-variable "AMI" {
+variable "ami" {
   default = "ami-003d8924a33dc0fd7"
 }
 
-variable "EC2_TYPE" {
+variable "ec2_type" {
   default = "t2.nano"
+}
+
+variable "vpc_cidr" {
+  default = "10.20.0.0/16"
+}
+
+variable "subnets_cidr" {
+//  type = "string"
+  default = "10.1.1.0/24"
+//  default = ["10.20.1.0/24", "10.20.2.0/24"]
 }

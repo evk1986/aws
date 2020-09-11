@@ -1,32 +1,51 @@
 provider "aws" {
-  profile = var.PROFILE
-  region = var.AWS_REGION
+  profile = var.profile
+  region = var.region
 }
 
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
-data "aws_key_pair" "root" {
-  public_key = "root_key_pair"
+resource "aws_vpc" "cloud" {
+  cidr_block = var.vpc_cidr
+  enable_classiclink = false
 }
 
-resource "aws_vpc" "cloud" {
-  cidr_block = "10.0.0.0/16"
-  enable_classiclink = false
-
+resource "aws_internet_gateway" "iGateway" {
+  vpc_id = "${aws_vpc.cloud.id}"
+  tags = {
+    Name = "main"
+  }
 }
 
 resource "aws_subnet" "main-public-subnet" {
   vpc_id = "${aws_vpc.cloud.id}"
-  cidr_block = "10.0.1.0/24"
-  availability_zone_id = data.aws_availability_zones.available.zone_ids[0]
+  cidr_block = "${var.subnets_cidr}"
+  availability_zone_id = "${element(data.aws_availability_zones.available.zone_ids, 0)}"
   map_public_ip_on_launch = true
   tags = {
     Name = "main-public-subnet"
   }
 }
 
+resource "aws_route_table" "public_rt" {
+  vpc_id = "${aws_vpc.cloud.id}"
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.iGateway.id}"
+  }
+
+  tags = {
+    Name = "publicRouteTable"
+  }
+}
+
+resource "aws_route_table_association" "a" {
+  count = "${length(var.subnets_cidr)}"
+  subnet_id = "${aws_subnet.main-public-subnet.id}"
+  route_table_id = "${aws_route_table.public_rt.id}"
+}
 
 resource "aws_security_group" "security" {
   vpc_id = aws_vpc.cloud.id
@@ -35,7 +54,7 @@ resource "aws_security_group" "security" {
     to_port = 22
     protocol = "tcp"
     cidr_blocks = [
-      "10.0.0.0/16"]
+      var.subnets_cidr]
   }
   egress {
     from_port = 0
@@ -51,8 +70,8 @@ resource "aws_security_group" "security" {
 }
 
 resource "aws_launch_configuration" "dummy" {
-  image_id = var.AMI
-  instance_type = var.EC2_TYPE
+  image_id = var.ami
+  instance_type = var.ec2_type
   key_name = "syntetich"
   enable_monitoring = false
   security_groups = [

@@ -19,7 +19,9 @@ variable "vpc_cidr" {
 }
 
 variable "subnets_cidr" {
-//  type = "string"
-  default = "10.1.1.0/24"
-//  default = ["10.20.1.0/24", "10.20.2.0/24"]
+  type = "map"
+  default = {
+    "default_cidr" = "10.20.1.0/24"
+  }
+
 }

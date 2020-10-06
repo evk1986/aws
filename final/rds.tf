@@ -10,9 +10,23 @@ resource "aws_subnet" "rds" {
 }
 
 resource "aws_db_subnet_group" "dbsubnet" {
-  name = "main"
+  name = "rds group"
   description = "Terraform example RDS subnet group"
   subnet_ids = [for s in aws_subnet.rds : s.id]
+}
+
+resource "aws_route_table" "rds" {
+  vpc_id = aws_vpc.cloud.id
+  route {
+    instance_id = aws_instance.nat_instance.id
+    cidr_block = "0.0.0.0/0"
+  }
+}
+
+resource "aws_route_table_association" "rds_rt_assc" {
+  count = length(aws_subnet.rds)
+  route_table_id = aws_route_table.rds.id
+  subnet_id = aws_subnet.rds[count.index].id
 }
 
 resource "aws_security_group" "rds" {
@@ -26,13 +40,14 @@ resource "aws_security_group" "rds" {
     security_groups = [
       aws_security_group.security.id,
       aws_security_group.private_security.id,
+      aws_security_group.bastion_security.id
     ]
   }
   # Allow all outbound traffic.
   egress {
     from_port = 0
     to_port = 0
-    protocol = "-1"
+    protocol = "tcp"
     cidr_blocks = [
       "0.0.0.0/0"]
   }
@@ -57,4 +72,8 @@ resource "aws_db_instance" "dbinst1" {
   tags = {
     Name = "rds-database-instance"
   }
+}
+
+output "rds_host" {
+  value = aws_db_instance.dbinst1.address
 }

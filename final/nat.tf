@@ -58,14 +58,6 @@ resource "aws_default_route_table" "def-route-table" {
   }
 }
 
-//resource "aws_route_table" "private-rt" {
-//  vpc_id = aws_vpc.cloud.id
-//  route {
-//    cidr_block = "0.0.0.0/0"
-//    instance_id = aws_instance.nat_instance.id
-//  }
-//}
-
 resource "aws_route_table_association" "private_subnet_assoc" {
   route_table_id = aws_default_route_table.def-route-table.id
   subnet_id = aws_subnet.private_subnet.id

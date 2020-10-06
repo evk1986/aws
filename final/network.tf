@@ -8,13 +8,6 @@ resource "aws_vpc" "cloud" {
   }
 }
 
-resource "aws_internet_gateway" "iGateway" {
-  vpc_id = aws_vpc.cloud.id
-  tags = {
-    Name = "main-gateway"
-  }
-}
-
 resource "aws_subnet" "public_subnet" {
   vpc_id = aws_vpc.cloud.id
   cidr_block = lookup(var.subnets_cidr, "public")
@@ -45,6 +38,12 @@ resource "aws_subnet" "private_subnet" {
   }
 }
 
+resource "aws_internet_gateway" "iGateway" {
+  vpc_id = aws_vpc.cloud.id
+  tags = {
+    Name = "main-gateway"
+  }
+}
 
 resource "aws_route_table" "rtblPublic" {
   vpc_id = aws_vpc.cloud.id
@@ -58,7 +57,7 @@ resource "aws_route_table" "rtblPublic" {
   }
 }
 
-resource "aws_route_table_association" "route" {
+resource "aws_route_table_association" "public_route" {
   subnet_id = aws_subnet.public_subnet.id
   route_table_id = aws_route_table.rtblPublic.id
 }
@@ -71,18 +70,26 @@ resource "aws_route_table_association" "bastion_rout" {
 resource "aws_security_group" "security" {
   vpc_id = aws_vpc.cloud.id
   ingress {
+    from_port = 80
+    protocol = "tcp"
+    to_port = 80
+    security_groups = aws_elb.elb.security_groups
+  }
+  ingress {
+    from_port = 80
+    protocol = "tcp"
+    to_port = 80
+    cidr_blocks = [
+      var.subnets_cidr.bastion,
+      var.subnets_cidr.private]
+  }
+  ingress {
     from_port = 22
     protocol = "tcp"
     to_port = 22
     cidr_blocks = [
       var.subnets_cidr.bastion,
       var.subnets_cidr.private]
-  }
-  ingress {
-    from_port = 80
-    protocol = "tcp"
-    to_port = 80
-    security_groups = aws_elb.elb.security_groups
   }
   ingress {
     from_port = 443
@@ -103,6 +110,15 @@ resource "aws_security_group" "security" {
     ]
   }
   ingress {
+    from_port = 5432
+    protocol = "tcp"
+    to_port = 5432
+    cidr_blocks = [
+      var.subnets_cidr.bastion,
+      var.subnets_cidr.private
+    ]
+  }
+  ingress {
     from_port = 53
     protocol = "udp"
     to_port = 53
@@ -113,8 +129,8 @@ resource "aws_security_group" "security" {
   }
   egress {
     from_port = 0
-    to_port = 0
-    protocol = -1
+    to_port = 65535
+    protocol = "tcp"
     cidr_blocks = [
       "0.0.0.0/0"]
   }
@@ -148,10 +164,31 @@ resource "aws_security_group" "private_security" {
     cidr_blocks = [
       lookup(var.subnets_cidr, "public")]
   }
+  ingress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = [
+      lookup(var.subnets_cidr, "public")]
+  }
+  ingress {
+    from_port = 53
+    to_port = 53
+    protocol = "udp"
+    cidr_blocks = [
+      lookup(var.subnets_cidr, "public")]
+  }
   egress {
     from_port = 0
-    to_port = 0
+    to_port = 65535
     protocol = "tcp"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+  egress {
+    from_port = 0
+    to_port = 254
+    protocol = "icmp"
     cidr_blocks = [
       "0.0.0.0/0"]
   }

@@ -37,11 +37,11 @@ resource "aws_elb" "elb" {
   }
 
   health_check {
-    healthy_threshold = 2
-    unhealthy_threshold = 2
-    timeout = 3
+    healthy_threshold = 5
+    unhealthy_threshold = 10
+    timeout = 15
     target = "HTTP:80/health"
-    interval = 30
+    interval = 45
   }
 
   cross_zone_load_balancing = true

@@ -2,26 +2,24 @@
 resource "aws_iam_policy" "s3_policy" {
   name        = "ec2--s3-policy"
   description = "s3 acess"
-  policy      = file("s3Policy.json")
+  policy      = file("policies/s3Policy.json")
 }
 
 resource "aws_iam_policy" "rds_policy" {
   name        = "ec2-rds-policy"
   description = "rds acess"
-  policy      = file("rdsPolicy.json")
+  policy      = file("policies/rdsPolicy.json")
 }
 
 resource "aws_iam_policy" "dynamo_policy" {
   name        = "ec2-dynamo-policy"
   description = "dynamo"
-  policy      = file("dynamoPolicy.json")
+  policy      = file("policies/dynamoPolicy.json")
 }
-
-
 
 resource "aws_iam_role" "assume_role" {
   name               = "root-role"
-  assume_role_policy = file("assumePolicyRole.json")
+  assume_role_policy = file("policies/assumePolicyRole.json")
 }
 
 resource "aws_iam_policy_attachment" "attachment_s3" {

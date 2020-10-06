@@ -21,7 +21,7 @@ java -jar /opt/${aws_s3_bucket_object.public_artifact.id}.jar > /opt/log.log
   EOF
 }
 
-resource "aws_launch_configuration" "dummy" {
+resource "aws_launch_configuration" "public_ec2_lconfig" {
   image_id = var.ami
   instance_type = var.ec2_type
   key_name = "custom"
@@ -37,8 +37,8 @@ resource "aws_launch_configuration" "dummy" {
 
 }
 
-resource "aws_autoscaling_group" "ascaling" {
-  launch_configuration = aws_launch_configuration.dummy.name
+resource "aws_autoscaling_group" "public_ascaling" {
+  launch_configuration = aws_launch_configuration.public_ec2_lconfig.name
   vpc_zone_identifier = [
     aws_subnet.public_subnet.id
   ]
@@ -63,12 +63,12 @@ resource "aws_autoscaling_group" "ascaling" {
 
 
 data "aws_instances" "public_ec2" {
-  depends_on = [aws_autoscaling_group.ascaling]
+  depends_on = [aws_autoscaling_group.public_ascaling]
   instance_tags = {
     Name = "public-instance"
   }
 }
 
 output "public-ip" {
-  value = data.aws_instances.public_ec2.public_ips
+  value = data.aws_instances.public_ec2.private_ips
 }

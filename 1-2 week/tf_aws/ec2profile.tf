@@ -1,0 +1,22 @@
+
+resource "aws_iam_policy" "s3_policy" {
+  name        = "ec2--s3-policy"
+  description = "s3 access"
+  policy      = file("policies/s3Policy.json")
+}
+
+resource "aws_iam_role" "assume_role" {
+  name               = "root-role"
+  assume_role_policy = file("policies/assumePolicyRole.json")
+}
+
+resource "aws_iam_policy_attachment" "attachment_s3" {
+  name       = "ec2-attachment"
+  roles      = [aws_iam_role.assume_role.name]
+  policy_arn = aws_iam_policy.s3_policy.arn
+}
+
+resource "aws_iam_instance_profile" "ec2" {
+  name  = "ec2_profile"
+  role = aws_iam_role.assume_role.name
+}

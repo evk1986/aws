@@ -19,9 +19,12 @@ variable "vpc_cidr" {
 }
 
 variable "subnets_cidr" {
-  type = "map"
+  type = map(string)
   default = {
-    "default_cidr" = "10.20.1.0/24"
+    public = "10.20.2.0/24"
+    private = "10.20.1.0/24"
+    bastion = "10.20.3.0/24"
   }
-
 }
+
+data "aws_availability_zones" "available" {}

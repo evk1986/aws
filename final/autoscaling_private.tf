@@ -20,9 +20,6 @@ export PGPASSWORD=${aws_db_instance.dbinst1.password}
 export PGHOSTADDR=${aws_db_instance.dbinst1.address}
 export PGUSER=${aws_db_instance.dbinst1.username}
 export PGPASSWORD=${aws_db_instance.dbinst1.password}
-echo $PGPASSWORD
-echo $PGUSER
-echo $PGHOSTADRR
 
 echo "Infra java8 installation fibished" >> /var/log/user-script.log
 /usr/bin/aws s3 cp s3://${aws_s3_bucket.my_bucket.id}/${aws_s3_bucket_object.private_artifact.id} /opt/${aws_s3_bucket_object.private_artifact.id}.jar
